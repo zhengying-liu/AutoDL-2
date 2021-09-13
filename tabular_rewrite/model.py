@@ -51,6 +51,9 @@ class Model():
         # return predictions
         print("ha"*50)
         print(test_dataset._x.shape)
-        n_examples = 18
-        n_classes = len(test_dataset[0][1])
+        n_examples = test_dataset._x.shape[0]
+        n_classes = test_dataset._x.shape[1]
+        # print(test_dataset._x.shape)
+        # n_examples = 18
+        # n_classes = len(test_dataset[0][1])
         return np.zeros((n_examples, n_classes))

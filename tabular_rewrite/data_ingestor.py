@@ -7,6 +7,7 @@ from torch.utils.data import Dataset
 import logging
 import tensorflow as tf
 import numpy as np
+import time
 
 
 
@@ -81,7 +82,31 @@ class MyDataIngestor(DataIngestor):
             # return train_dataloader # pyroch dataset
             return dataset  #
         elif mode == 'test':
-            return NotImplementedError
+            start1 = time.time()
+            # Count examples on test set
+            if not hasattr(self, 'num_examples_test'):
+                self.logger.info("Counting number of examples on test set.")
+                dataset = dataset.batch(128)
+                iterator = dataset.make_one_shot_iterator()
+                example, labels = iterator.get_next()
+                X = []
+                with tf.Session(config=tf.ConfigProto(log_device_placement=False)) as sess:
+                    while True:
+                        try:
+                            ex, la = sess.run((example, labels))
+                            n_classes = la.shape[-1]
+                            ex = np.squeeze(ex)
+                            X.extend(ex)
+                        except tf.errors.OutOfRangeError:
+                            break
+                self.X_test = np.array(X)
+                self.num_examples_test = self.X_test.shape[0]
+                self.logger.info("Finished counting. There are {} examples for test set." \
+                            .format(self.num_examples_test))
+            print ('###test to_numpy time:', time.time() - start1)
+            n_examples = len(self.X_test)
+            y_test = np.zeros((n_examples, n_classes))
+            return MyDataset(self.X_test, y_test)
     
 '''
     The __getitem__ method of custom dataset must return 
